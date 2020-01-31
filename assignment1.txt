@@ -1,0 +1,16 @@
+GHCi, version 8.6.5: http://www.haskell.org/ghc/  :? for help
+Prelude> let sphere_surface_area r = 4 * pi * (r ^ 2)
+Prelude> sphere_surface_area 2
+50.26548245743669
+Prelude> sphere_surface_area 5
+314.1592653589793
+Prelude> sphere_surface_area 10
+1256.6370614359173
+Prelude> sphere_surface_area 100
+125663.70614359173
+Prelude> sphere_surface_area 1000
+1.2566370614359172e7
+Prelude> sphere_surface_area 1 == 4 * pi
+True
+Prelude> :q                                                                                                                          
+Leaving GHCi.
