@@ -32,4 +32,4 @@ last' (x:xs) = last' xs
 last'' :: [a] -> a
 last'' xs = case xs of
             (x:[]) -> x
-            (x:xs) -> last'' xs
+            (x:ys) -> last'' ys
