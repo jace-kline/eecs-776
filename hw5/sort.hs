@@ -55,12 +55,13 @@ sortCommand opts files = do
     input <- case files of 
                 [] -> getContents
                 fs -> readFiles fs
-    let ls = lines input
+    let ls = nonemptys $ lines input
     let sorted = (if Numeric `elem` opts then sortNumeric else sortAlphabetic) ls
     if Compare `elem` opts 
     then putStrLn $ compareOutput ls sorted
     else sequence_ $ map putStrLn $ optsApplied sorted
     where
+        nonemptys = filter (\xs -> not (null xs))
         compareOutput ls sorted = let comp = compareLines ls sorted
                                    in case comp of
                                         Nothing -> "sort: file already sorted"

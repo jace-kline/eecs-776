@@ -1,5 +1,8 @@
 10.5 hello
 20.6 goodbye
 13 Hello
+13 Hello
+0 Adios
 19.2 Goodbye
-23.9 Sup
+23.9 Hola
+0 Adios

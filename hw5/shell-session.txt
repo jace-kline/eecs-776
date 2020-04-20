@@ -1,0 +1,223 @@
+> ghc sort.hs
+[1 of 1] Compiling Main             ( sort.hs, sort.o )
+Linking sort ...
+
+> cat test1.txt
+10.5 hello
+20.6 goodbye
+13 Hello
+13 Hello
+0 Adios
+19.2 Goodbye
+23.9 Hola
+0 Adios
+
+> ./sort -n test1.txt
+0 Adios
+0 Adios
+10.5 hello
+13 Hello
+13 Hello
+19.2 Goodbye
+20.6 goodbye
+23.9 Hola
+
+> ./sort -nu test1.txt
+0 Adios
+10.5 hello
+13 Hello
+19.2 Goodbye
+20.6 goodbye
+23.9 Hola
+
+> ./sort -c
+sort: disorder at line 1: 10.5 hello
+
+> ./sort -n -r test1.txt
+23.9 Hola
+20.6 goodbye
+19.2 Goodbye
+13 Hello
+13 Hello
+10.5 hello
+0 Adios
+0 Adios
+
+> ./sort -rnu test1.txt
+23.9 Hola
+20.6 goodbye
+19.2 Goodbye
+13 Hello
+10.5 hello
+0 Adios
+
+> cat test2.txt
+the
+quick
+brown
+fox
+jumped
+over
+the
+lazy
+dog
+
+> ./sort test2.txt
+brown
+dog
+fox
+jumped
+lazy
+over
+quick
+the
+the
+
+> ./sort test1.txt test2.txt
+0 Adios
+0 Adios
+10.5 hello
+13 Hello
+13 Hello
+19.2 Goodbye
+20.6 goodbye
+23.9 Hola
+brown
+dog
+fox
+jumped
+lazy
+over
+quick
+the
+the
+
+> cat test3.txt
+The
+the
+Quick
+quick 
+Brown
+brown
+Fox
+fox
+Jumped
+jumped
+Over
+over
+The
+the
+Lazy
+lazy
+Dog
+
+> ./sort test3.txt
+brown
+Brown
+dog
+Dog
+fox
+Fox
+jumped
+Jumped
+lazy
+Lazy
+over
+Over
+quick 
+Quick
+the
+the
+The
+The
+
+> ./sort -u test3.txt
+brown
+Brown
+dog
+Dog
+fox
+Fox
+jumped
+Jumped
+lazy
+Lazy
+over
+Over
+quick 
+Quick
+the
+The
+
+> ./sort -u test3.txt
+The
+the
+Quick
+quick 
+Over
+over
+Lazy
+lazy
+Jumped
+jumped
+Fox
+fox
+Dog
+dog
+Brown
+brown
+
+> cat test1.txt | ./sort -n
+0 Adios
+0 Adios
+10.5 hello
+13 Hello
+13 Hello
+19.2 Goodbye
+20.6 goodbye
+23.9 Hola
+
+> cat test1.txt | ./sort -nur
+23.9 Hola
+20.6 goodbye
+19.2 Goodbye
+13 Hello
+10.5 hello
+0 Adios
+
+> ./sort test1.txt test2.txt test3.txt
+0 Adios
+0 Adios
+10.5 hello
+13 Hello
+13 Hello
+19.2 Goodbye
+20.6 goodbye
+23.9 Hola
+brown
+brown
+Brown
+dog
+dog
+Dog
+fox
+fox
+Fox
+jumped
+jumped
+Jumped
+lazy
+lazy
+Lazy
+over
+over
+Over
+quick
+quick 
+Quick
+the
+the
+the
+the
+The
+The
