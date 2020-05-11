@@ -3,10 +3,10 @@ module Parser where
 import Control.Monad
 import Control.Applicative
 
-data Parser t a = Parser ([t] -> Either String (a, [t]))
+newtype Parser t a = Parser { runParser :: [t] -> Either String (a, [t]) }
 
 instance Functor (Parser t) where
-    fmap f (Parser g) = Parser $ \ts -> g ts >>= (\(x, ts') -> (f x, ts'))
+    fmap f (Parser g) = Parser $ \ts -> fmap (\(x,y) -> (f x, y)) $ g ts
 
 instance Applicative (Parser t) where
     pure x = Parser $ \ts -> pure (x, ts)
@@ -24,7 +24,10 @@ instance Alternative (Parser t) where
 
 instance Monad (Parser t) where
     return = pure
-    (Parser g) >>= h = Parser $ \ts -> g ts >>= \ (x, ts') -> h x
+    (Parser g) >>= h = Parser $ \ts -> 
+        case g ts of
+            Right (x, ts') -> (runParser $ h x) ts'
+            Left m         -> Left m
 
-combine :: Parse a -> Parse [a] -> Parse [a]
+combine :: Parser t a -> Parser t [a] -> Parser t [a]
 combine = liftA2 (:)
