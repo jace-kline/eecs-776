@@ -3,7 +3,7 @@ module ParseGrammar where
 import Parser
 import Grammar
 import Data.Char (isSpace, isLetter, isAlphaNum, isPrint)
-import Control.Applicative (liftA2, (<|>))
+import Control.Applicative
 
 -- used for stripping a token that doesn't add semantic value, but still important to syntax rules
 -- partially apply with a token, and can be wrapped into an instance of Parser t () type
@@ -21,13 +21,12 @@ strips [] = pure ()
 strips (x:xs) = strip x >> strips xs
 
 -- used for parsing grouping characters of a parsed internal expression with arbitrary whitespace ignored
--- argument for fail msg to be provided for adding "external context" to the fail message
 parseWithSurround :: Char -> Char -> Parser Char a -> Parser Char a
 parseWithSurround t1 t2 p = parseWS *> (strip t1) *> parseWS *> p <* parseWS <* (strip t2)
 
-oneOrMore :: Parser t a -> Parser t [a]
-oneOrMore p = p `combine` p_rec
-    where p_rec = (p `combine` p_rec) <|> (pure [])
+-- oneOrMore :: Parser t a -> Parser t [a]
+-- oneOrMore p = p `combine` p_rec
+--     where p_rec = (p `combine` p_rec) <|> (pure [])
 
 parseWS :: Parser Char ()
 parseWS = Parser $ \ s -> pure ((), trimWS s)
@@ -35,18 +34,21 @@ parseWS = Parser $ \ s -> pure ((), trimWS s)
 trimWS :: String -> String
 trimWS = dropWhile isSpace
 
-grammarParse :: String -> Either String [(Variable, [Production])]
-grammarParse s = let es = map (runParser parseLine) (lines s)
+grammarParse :: String -> Either String Grammar
+grammarParse s = rulesParse s >>= \rules -> mkGrammar rules
+
+rulesParse :: String -> Either String [ProductionRules]
+rulesParse s = let es = map (runParser parseLine) (lines s)
                  in if null es 
                     then Left "Error. No input lines provided."
                     else sequence $ map (\e -> e >>= \ (x, _) -> pure x) es
 
 parseLine :: Parser Char (Variable, [Production])
-parseLine = liftA2 (,) parseVar (parseEq *> parseProds)
+parseLine = liftA2 (,) parseVariable (parseEq *> parseProds)
     where parseEq = parseWS *> strips "::="
 
-parseVar :: Parser Char Variable
-parseVar = parseWithSurround '<' '>' parseVarName
+parseVariable :: Parser Char Variable
+parseVariable = parseWithSurround '<' '>' parseVarName
 
 parseVarName :: Parser Char Variable
 parseVarName = Parser $ \ts ->
@@ -60,28 +62,32 @@ parseVarName = Parser $ \ts ->
                       in Right (x:xs', xs'')
 
 parseProds :: Parser Char [Production]
-parseProds = f <|> (fmap (\x -> [x]) parseProd)
-    where f = oneOrMore $ parseProd <* parseWS <* strip '|'
+-- parseProds = f <|> (fmap (\x -> [x]) parseProd)
+--     where f = (some $ parseProd <* sep) <|> 
+--           sep = parseWS <* strip '|' <* parseWS
+parseProds = someWithSeparator parseProd sep
+    where sep = parseWS <* strip '|' <* parseWS
 
 parseProd :: Parser Char Production
-parseProd = oneOrMore parseProdExpr
+parseProd = some parseProdExpr
 
 parseProdExpr :: Parser Char ProdExpr
-parseProdExpr = parseGrp <|> parseMayb <|> parseSeq <|> parsePrim
-    where parseGrp = parseWithSurround '(' ')' parseProdExpr_opt
-          parseMayb = fmap Mayb $ parseWithSurround '[' ']' parseProdExpr_opt
-          parseSeq = fmap Seq $ parseWithSurround '{' '}' parseProdExpr_opt
-          parsePrim = fmap Prim parseProdComp
+parseProdExpr = parseTerminals <|> parseVar <|> parseGrp <|> parseMayb <|> parseSeq
+    where parseGrp = fmap Grp $ parseWithSurround '(' ')' parseProds
+          parseMayb = fmap Mayb $ parseWithSurround '[' ']' parseProds
+          parseSeq = fmap Seq $ parseWithSurround '{' '}' parseProds
+          parseVar = fmap Var parseVariable
+          parseTerminals = fmap Terminals parseTerms
 
-parseProdExpr_opt :: Parser Char ProdExpr
-parseProdExpr_opt = (fmap Opts f) <|> parseProdExpr
-    where f = oneOrMore $ parseProdExpr <* parseWS <* strip '|'
+-- parseProdExpr_opt :: Parser Char ProdExpr
+-- parseProdExpr_opt = (fmap Opts f) <|> parseProdExpr
+--     where f = some $ parseProdExpr <* parseWS <* strip '|' <* parseWS
 
-parseProdComp :: Parser Char ProdComp
-parseProdComp = (fmap Var parseVar) <|> (fmap Terminals parseTerminals)
+-- parseProdComp :: Parser Char ProdComp
+-- parseProdComp = (fmap Var parseVar) <|> (fmap Terminals parseTerminals)
 
-parseTerminals :: Parser Char String
-parseTerminals = parseWithSurround '\'' '\'' f
+parseTerms :: Parser Char String
+parseTerms = parseWithSurround '\'' '\'' f
     where f = Parser $ \ts -> 
               let is_valid c = isPrint c && c /= '\''
                   (ts', ts'') = (takeWhile is_valid ts, dropWhile is_valid ts)

@@ -31,3 +31,10 @@ instance Monad (Parser t) where
 
 combine :: Parser t a -> Parser t [a] -> Parser t [a]
 combine = liftA2 (:)
+
+someWithSeparator :: Parser t a -> Parser t b -> Parser t [a]
+someWithSeparator f sep = (liftA3 (\x _ z -> x : z) f sep (someWithSeparator f sep)) 
+                       <|> fmap (\x -> [x]) f
+
+appSum :: (Alternative f) => [f a] -> f a                      
+appSum = foldr (<|>) empty
