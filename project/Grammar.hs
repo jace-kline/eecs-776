@@ -73,6 +73,6 @@ validateProductionVars g = sequence_ (map f (map snd g)) >> pure g
           Mayb exprs  -> f exprs
           Seq exprs   -> f exprs
 
-gpagrammarstr = "<gpa> ::= '4.0'['0']\n<gpa> ::= <first-dig> '.' <decimal> [<decimal>]\n<first-dig> ::= '0'|'1'|'2'|'3'\n<decimal> ::= <first-dig> |'4'|'5'|'6'|'7'|'8'|'9'"
+gpagrammarstr = "<gpa> ::= '4.0'['0']\n<gpa> ::= <first-dig> '.' <decimal> {<decimal>}\n<first-dig> ::= '0'|'1'|'2'|'3'\n<decimal> ::= <first-dig> |'4'|'5'|'6'|'7'|'8'|'9'"
 
-numbergrammarstr = "<number> ::= <digit> {<digit>} '.' <number>\n<digit> ::= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'"
+numbergrammarstr = "<number> ::= <digit> {<digit>} ['.' <digit> {<digit>}]\n<digit> ::= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'"

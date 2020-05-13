@@ -29,6 +29,7 @@ instance Monad (Parser t) where
             Right (x, ts') -> (runParser $ h x) ts'
             Left m         -> Left m
 
+
 combine :: Parser t a -> Parser t [a] -> Parser t [a]
 combine = liftA2 (:)
 
@@ -38,3 +39,6 @@ someWithSeparator f sep = (liftA3 (\x _ z -> x : z) f sep (someWithSeparator f s
 
 appSum :: (Alternative f) => [f a] -> f a                      
 appSum = foldr (<|>) empty
+
+failWithContext :: String -> ([t] -> String) -> Parser t a
+failWithContext msg f = Parser $ \ts -> Left $ msg ++ f ts

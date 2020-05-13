@@ -7,11 +7,6 @@ import System.Random
 max_seq_length :: Int
 max_seq_length = 5
 
--- randomDerivation :: Grammar -> IO ParseTree
--- randomDerivation g = do
---     gen <- getStdGen
---     return $ generateTree g gen
-
 generateTree :: Grammar -> StdGen -> ParseTree
 generateTree g gen = genNode gen $ Var (startVariable g)
     where 

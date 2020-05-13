@@ -8,17 +8,21 @@ import Generator
 import ParseTree
 import Grid
 import System.Random
+import Control.Exception
 
 main = do
-    case grammarParse numbergrammarstr of
+    gen <- getStdGen
+    let (i, _) = random gen :: (Int, StdGen)
+    case grammarParse gpagrammarstr of
         Left m -> print m
-        Right g -> gomain g 0 5
+        Right g -> gomain g i 0 5
   
-gomain :: Grammar -> Int -> Int -> IO ()
-gomain g n m = do
-    let t = generateTree g (mkStdGen n)
+gomain :: Grammar -> Int -> Int -> Int -> IO ()
+gomain g i n m = do
+    let t = generateTree g (mkStdGen (i + n))
     -- print t
     putStr $ showGrid $ toShowGrid t
+    putStr $ "Derived String: " ++ derivedString t ++ "\n"
     -- print $ gridLists $ toShowGrid t
     -- putStr '\n' 
-    if n < m then gomain g (n + 1) m else return ()
+    if n < m then gomain g i (n + 1) m else return ()

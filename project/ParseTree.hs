@@ -11,6 +11,17 @@ data ParseTree = Nil
                | VarReplace String ParseTree
                     -- deriving Show
 
+derivedString :: ParseTree -> String
+derivedString t = 
+     case t of
+          Nil           -> ""
+          Leaf s        -> s
+          GrpNode t'    -> derivedString t'
+          MaybNode t'   -> derivedString t'
+          SeqNode t'    -> derivedString t'
+          VarReplace v t' -> derivedString t'
+          ConcatNode ts -> foldr (++) [] $ map derivedString ts
+
 toShowGrid :: ParseTree -> Grid Char
 toShowGrid t = go t
      where 

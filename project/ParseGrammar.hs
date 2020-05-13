@@ -38,10 +38,24 @@ grammarParse :: String -> Either String Grammar
 grammarParse s = rulesParse s >>= \rules -> mkGrammar rules
 
 rulesParse :: String -> Either String [ProductionRules]
-rulesParse s = let es = map (runParser parseLine) (lines s)
-                 in if null es 
-                    then Left "Error. No input lines provided."
-                    else sequence $ map (\e -> e >>= \ (x, _) -> pure x) es
+rulesParse s = 
+    let es = map (runParser parseLine) (lines s)
+    in if null es 
+        then Left "Error. No input lines provided."
+        else g $ foldr f (Right []) $ zip [1..] es
+        where
+            g (Left msg) = Left $ "Syntax errors:\n" ++ msg
+            g rs         = rs
+            f (i,x) r = (case x of
+                            Left msg ->
+                                (case r of 
+                                    Left msg_rest -> Left $ "Line " ++ show i ++ ": " ++ msg ++ "\n" ++ msg_rest
+                                    Right _       -> Left $ "Line " ++ show i ++ ": " ++ msg ++ "\n")
+                            Right (y, _) ->
+                                (case r of
+                                    Left _   -> r
+                                    Right ys -> Right $ y : ys))
+                        -- sequence $ map (\e -> e >>= \ (x, _) -> pure x) es
 
 parseLine :: Parser Char (Variable, [Production])
 parseLine = liftA2 (,) parseVariable (parseEq *> parseProds)
@@ -62,9 +76,6 @@ parseVarName = Parser $ \ts ->
                       in Right (x:xs', xs'')
 
 parseProds :: Parser Char [Production]
--- parseProds = f <|> (fmap (\x -> [x]) parseProd)
---     where f = (some $ parseProd <* sep) <|> 
---           sep = parseWS <* strip '|' <* parseWS
 parseProds = someWithSeparator parseProd sep
     where sep = parseWS <* strip '|' <* parseWS
 
@@ -72,7 +83,7 @@ parseProd :: Parser Char Production
 parseProd = some parseProdExpr
 
 parseProdExpr :: Parser Char ProdExpr
-parseProdExpr = parseTerminals <|> parseVar <|> parseGrp <|> parseMayb <|> parseSeq
+parseProdExpr = parseTerminals <|> parseVar <|> parseGrp <|> parseMayb <|> parseSeq <|> failWithContext "Could not parse production expression. " nextTokenErr
     where parseGrp = fmap Grp $ parseWithSurround '(' ')' parseProds
           parseMayb = fmap Mayb $ parseWithSurround '[' ']' parseProds
           parseSeq = fmap Seq $ parseWithSurround '{' '}' parseProds
@@ -92,3 +103,7 @@ parseTerms = parseWithSurround '\'' '\'' f
               let is_valid c = isPrint c && c /= '\''
                   (ts', ts'') = (takeWhile is_valid ts, dropWhile is_valid ts)
               in Right (ts', ts'')
+
+nextTokenErr :: String -> String
+nextTokenErr [] = "Error encountered on empty string."
+nextTokenErr ts = "Error parsing token word: " ++ (head $ words ts)

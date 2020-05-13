@@ -13,6 +13,9 @@ import Parser
 import ParseTree
 import Control.Applicative
 
+attemptMatch :: Grammar -> String -> Either String ParseTree
+attemptMatch g = runParser . parseMatch g
+
 parseMatch :: Grammar -> Parser Char ParseTree
 parseMatch g = parseMatch' $ Var $ startVariable g
     where 
