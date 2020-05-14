@@ -68,7 +68,7 @@ validateProductionVars g = sequence_ (map f (map snd g)) >> pure g
           Terminals _ -> Right ()
           Var v       -> if v `elem` (map rulesVariable g) 
                          then Right ()
-                         else Left v
+                         else Left $ "Undefined reference to variable '" ++ v ++ "' exists in production rules." 
           Grp exprs   -> f exprs
           Mayb exprs  -> f exprs
           Seq exprs   -> f exprs

@@ -16,7 +16,7 @@ instance Applicative (Parser t) where
         return (f x y, ts'')
 
 instance Alternative (Parser t) where
-    empty = Parser $ \_ -> Left "All parse options failed in alternative sequence."
+    empty = Parser $ \_ -> Left "All parse options failed."
     (Parser g) <|> (Parser h) = Parser $ \ts -> 
         case g ts of
             Left msg -> h ts
