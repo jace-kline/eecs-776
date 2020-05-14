@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 45702846d6fc04679036942857cf59d9d6931cabcce239e799d790c392cdb58a
+-- hash: f61a6b256d476c91179ceb0cd929eb359a374d3601fcb5f5d2363c357e5770f8
 
 name:           ebnf
 version:        0.1.0.0
@@ -27,13 +27,22 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Accepter
+      Generator
+      Grammar
+      Grid
+      Impure
+      ParseGrammar
+      Parser
+      ParseTree
+      SampleGrammars
   other-modules:
       Paths_ebnf
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , random
   default-language: Haskell2010
 
 executable ebnf-exe
@@ -46,6 +55,7 @@ executable ebnf-exe
   build-depends:
       base >=4.7 && <5
     , ebnf
+    , random
   default-language: Haskell2010
 
 test-suite ebnf-test
@@ -59,4 +69,5 @@ test-suite ebnf-test
   build-depends:
       base >=4.7 && <5
     , ebnf
+    , random
   default-language: Haskell2010

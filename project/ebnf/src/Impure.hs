@@ -12,8 +12,8 @@ import System.Random
 import Control.Exception
 import System.Exit
 
-main :: IO ()
-main = do
+main' :: IO ()
+main' = do
     -- welcome message
     welcome
     try run :: IO (Either SomeException ())
@@ -153,7 +153,7 @@ printParseTree tree = do
 
 getIntInput :: IO Int
 getIntInput = do
-    putStr "Enter an integer:\n> "
+    putStr "Enter an integer: "
     ret <- try $ readLn :: IO (Either SomeException Int)
     case ret of
         Left _ -> do
