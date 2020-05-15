@@ -9,7 +9,7 @@ data ParseTree = Nil
                | MaybNode ParseTree
                | SeqNode  ParseTree 
                | VarReplace String ParseTree
-                    -- deriving Show
+                    deriving Show
 
 derivedString :: ParseTree -> String
 derivedString t = 
@@ -40,13 +40,13 @@ toShowGrid t = go t
           addOrigin = addListH g 0 0
           f str t' = mergeGrids 3 0 (toShowGrid t') $ addListV (addOrigin str) 1 0 "||"
 
-instance Show ParseTree where
-     show t = foldr (++) [] $ map f $ gridLists $ toShowGrid t
-          where
-               f m_xs = case m_xs of
-                    Nothing -> "\n"
-                    Just xs -> map g xs
-               g m_x = case m_x of
-                    Nothing -> ' '
-                    Just x  -> x
+-- instance Show ParseTree where
+--      show t = foldr (++) [] $ map f $ gridLists $ toShowGrid t
+--           where
+--                f m_xs = case m_xs of
+--                     Nothing -> "\n"
+--                     Just xs -> map g xs
+--                g m_x = case m_x of
+--                     Nothing -> ' '
+--                     Just x  -> x
 

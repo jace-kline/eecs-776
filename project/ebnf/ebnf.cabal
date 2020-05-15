@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f61a6b256d476c91179ceb0cd929eb359a374d3601fcb5f5d2363c357e5770f8
+-- hash: 1cc943e4594f81e661fa2b0ade3cc537bc7fee7ab8dc654148800deea69a94ca
 
 name:           ebnf
 version:        0.1.0.0
@@ -51,20 +51,6 @@ executable ebnf-exe
       Paths_ebnf
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      base >=4.7 && <5
-    , ebnf
-    , random
-  default-language: Haskell2010
-
-test-suite ebnf-test
-  type: exitcode-stdio-1.0
-  main-is: Spec.hs
-  other-modules:
-      Paths_ebnf
-  hs-source-dirs:
-      test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5

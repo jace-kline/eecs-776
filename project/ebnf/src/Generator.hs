@@ -30,8 +30,8 @@ generateTree g gen = genNode gen $ Var (startVariable g)
 
 generators :: StdGen -> Int -> [StdGen]
 generators g n = go g n
-    where go g 1 = [fst (split g)]
+    where go g 1 = [snd (split g)]
           go g n = 
               let rest = go g (n - 1)
-                  (_, g_new) = next $ head rest
+                  (_, g_new) = split $ head rest
               in g_new : rest

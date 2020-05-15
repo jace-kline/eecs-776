@@ -11,6 +11,7 @@ import SampleGrammars
 import System.Random
 import Control.Exception
 import System.Exit
+import Control.Concurrent
 
 main' :: IO ()
 main' = do
@@ -44,8 +45,7 @@ getGrammar = do
     where
         parseFromFile :: IO (String, Either String Grammar)
         parseFromFile = do
-            putStr "Enter a file name:\n> "
-            filename <- getLine
+            filename <- promptString "Enter a file path:"
             e_str <- try $ readFile filename :: IO (Either SomeException String)
             case e_str of
                 Left _    -> return ([], Left ("Failed to open or read input file '" ++ filename ++ "'."))
@@ -65,12 +65,10 @@ getGrammar = do
             Right g -> return (s,g)
         loadSampleGrammar :: IO (String, Either String Grammar)
         loadSampleGrammar = do
-            opt <- getMenuOption sampleGrammarMenu (1,5)
+            opt <- getMenuOption sampleGrammarMenu (1,3)
             case opt of
                 1 -> return $ (gpaGrammarStr, grammarParse gpaGrammarStr)
                 2 -> return $ (numberGrammarStr, grammarParse numberGrammarStr)
-                3 -> return $ (expressionGrammarStr, grammarParse expressionGrammarStr)
-                4 -> return $ (ebnfGrammarStr, grammarParse ebnfGrammarStr)
                 _ -> getGrammar >>= \(s, g) -> return (s, Right g)
         showHelp :: IO ()
         showHelp = do
@@ -110,8 +108,6 @@ sampleGrammarMenu :: IO ()
 sampleGrammarMenu = genMenu "EBNF Grammar Engine - Sample Grammar Options:" $
                      [ "GPA"
                      , "Number"
-                     , "Expression"
-                     , "EBNF"
                      , "None - go back to menu"]
 
 runWithGrammar :: String -> Grammar -> IO ()
@@ -119,31 +115,51 @@ runWithGrammar s g = do
     opt <- getMenuOption mainMenu (1,5)
     case opt of
         1 -> putStr s >> runWithGrammar s g
-        2 -> generateStr g >> runWithGrammar s g
-        3 -> checkStr g >> runWithGrammar s g
+        2 -> attemptGenerate >> runWithGrammar s g
+        3 -> attemptCheck >> runWithGrammar s g
         4 -> run
         5 -> exitSuccess
         _ -> runWithGrammar s g
+    where
+        attemptCheck = promptString m0 >>= (\s -> putStrLn m1 >> boundedRun (checkStr s g)) >>= respond m4
+        attemptGenerate = newStdGen >>= (\gen -> putStrLn m2 >> boundedRun (generateStr gen g)) >>= respond m5
+        m0 = "Input an input string to determine whether it is produced by the grammar:"
+        m1 = "Attempting to find a matching parse tree for the string. Allowing " ++ show bound_secs ++ " seconds to run..."
+        m2 = "Attempting to generate a string from the grammar. Allowing " ++ show bound_secs ++ " seconds to run..."
+        m3 = "Algorithm took more than " ++ show bound_secs ++ " seconds long and was terminated."
+        m4 = "Match successful. Generated parse tree:\n\n"
+        m5 = "String generation successful. Generated parse tree:\n\n"
+        bound_secs :: Int
+        bound_secs = 10
+        boundedRun :: IO (Either String ParseTree) -> IO (Either String ParseTree)
+        boundedRun action = do
+            let usecs = bound_secs * 1000000 :: Int
+            mvar <- newEmptyMVar
+            -- The first action (thread) to finish will fill the mvar.
+            -- True => The targeted action was completed within the time
+            -- False => action not completed within the allotted time
+            tids <- mapM (\act -> forkIO (act >>= putMVar mvar)) [threadDelay usecs >> return (Left m3), action]
+            is_success <- takeMVar mvar
+            mapM_ killThread tids
+            return is_success
+        respond :: String -> Either String ParseTree -> IO ()
+        respond success_msg e = case e of
+            Left m -> putStrLn m
+            Right tree -> putStr success_msg >> printParseTree tree
 
-checkStr :: Grammar -> IO ()
-checkStr g = do
-    putStr "Input an input string to determine whether it is produced by the grammar.\n> "
-    s <- getLine
-    putStrLn "Attempting to find a matching parse tree for the string..."
+promptString :: String -> IO String
+promptString prompt = do
+    putStrLn prompt
+    getLine
+
+checkStr :: String -> Grammar -> IO (Either String ParseTree)
+checkStr s g = do
     case attemptMatch g s of
-        Left msg -> do
-            putStr $ "Match failed. A parse tree could not be generated for this string. " ++ msg ++ "\n"
-        Right tree -> do
-            putStrLn "Match successful. Generated parse tree:"
-            printParseTree tree
+        Left msg -> return $ Left $ "Match failed. A parse tree could not be generated for this string. " ++ msg ++ "\n"
+        Right tree -> return $ Right tree
 
-generateStr :: Grammar -> IO ()
-generateStr g = do
-    putStrLn "Attempting to generate a string from the grammar..."
-    gen <- getStdGen
-    let tree = generateTree g gen
-    putStr "String generation successful. Generated parse tree:\n\n"
-    printParseTree tree
+generateStr :: StdGen -> Grammar -> IO (Either String ParseTree)
+generateStr gen g = return $ Right $ generateTree g gen
 
 printParseTree :: ParseTree -> IO ()
 printParseTree tree = do
@@ -153,7 +169,7 @@ printParseTree tree = do
 
 getIntInput :: IO Int
 getIntInput = do
-    putStr "Enter an integer: "
+    putStrLn "Enter an integer:"
     ret <- try $ readLn :: IO (Either SomeException Int)
     case ret of
         Left _ -> do

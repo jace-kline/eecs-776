@@ -28,8 +28,8 @@ parseMatch g = parseMatch' $ Var $ startVariable g
             (Var v)   -> fmap (VarReplace v) $ parseDisjunction (replaceVar g v)
             (Grp rs)  -> fmap GrpNode $ parseDisjunction rs
             (Mayb rs) -> fmap MaybNode $ (parseDisjunction rs) <|> pure Nil
-            (Seq rs)  -> fmap SeqNode $ ((fmap ConcatNode (some (parseDisjunction rs)))) <|> pure Nil
+            (Seq rs)  -> fmap SeqNode $ (fmap ConcatNode (some (parseDisjunction rs))) <|> pure Nil
         parseDisjunction :: [[ProdExpr]] -> Parser Char ParseTree
-        parseDisjunction rs = fmap ConcatNode $ appSum $ map parseConjunction rs
-        parseConjunction :: [ProdExpr] -> Parser Char [ParseTree]
-        parseConjunction = sequence . fmap parseMatch'
+        parseDisjunction rs = appSum $ map parseConjunction rs
+        parseConjunction :: [ProdExpr] -> Parser Char ParseTree
+        parseConjunction = fmap ConcatNode . sequence . map parseMatch'

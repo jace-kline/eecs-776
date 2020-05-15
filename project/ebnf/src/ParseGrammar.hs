@@ -39,7 +39,7 @@ grammarParse s = rulesParse s >>= \rules -> mkGrammar rules
 
 rulesParse :: String -> Either String [ProductionRules]
 rulesParse s = 
-    let es = map (runParser parseLine) (lines s)
+    let es = map (runParser parseLine) $ filter (\xs -> not (null xs)) $ lines s
     in if null es 
         then Left "Error. No input lines provided."
         else g $ foldr f (Right []) $ zip [1..] es
@@ -51,10 +51,10 @@ rulesParse s =
                                 (case r of 
                                     Left msg_rest -> Left $ "Line " ++ show i ++ ": " ++ msg ++ "\n" ++ msg_rest
                                     Right _       -> Left $ "Line " ++ show i ++ ": " ++ msg ++ "\n")
-                            Right (y, _) ->
+                            Right (y, ts) ->
                                 (case r of
                                     Left _   -> r
-                                    Right ys -> Right $ y : ys))
+                                    Right ys -> if null ts then Right (y : ys) else Left ("Unexpected tokens: " ++ show ts)))
                         -- sequence $ map (\e -> e >>= \ (x, _) -> pure x) es
 
 parseLine :: Parser Char (Variable, [Production])
